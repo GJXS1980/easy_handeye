@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='utf-8'?>
+<launch>
+
+    <arg name="namespace_prefix" default="auboe5_hkcamera_handeyecalibration" />
+
+    <arg name="robot_ip" doc="The IP address of the UR5 robot" />
+
+    <!--arg name="marker_size" value="0.09176" doc="Size of the ArUco marker used, in meters" />
+    <arg name="marker_id" value="582" doc="camera_marker" /-->
+
+
+
+    <arg name="marker_size" value="0.1" doc="Size of the ArUco marker used, in meters" />
+    <arg name="marker_id" value="1" doc="usb_cam_marker" />
+
+
+
+    <!--arg name="marker_size" value="0.09262" doc="Size of the ArUco marker used, in meters" />
+    <arg name="marker_id" value="409" doc="camera_marker" /-->
+
+
+    <arg name="ref_frame"       default=""/>  <!-- leave empty and the pose will be published wrt param parent_name -->
+
+
+    <!-- start the realsense -->
+    <!--include file="$(find realsense2_camera)/launch/view_d415_model.launch" /-->
+
+    <include file="$(find usb_cam)/launch/usb_cam-test.launch" />
+
+    <!-- start ArUco -->
+    <node name="aruco_tracker" pkg="aruco_ros" type="single">
+        <remap from="/camera_info" to="/usb_cam/camera_info" />
+        <remap from="/image" to="/usb_cam/image_raw" />
+        <param name="image_is_rectified" value="true"/>
+        <param name="marker_size"        value="$(arg marker_size)"/>
+        <param name="marker_id"          value="$(arg marker_id)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>
+        <param name="camera_frame"       value="usb_cam"/>
+        <param name="marker_frame"       value="usb_cam_marker" />
+    </node>
+
+    <!-- start the robot -->
+    <!--include file="$(find aubo_e5_moveit_config)/launch/moveit_planning_execution.launch">
+        <arg name="sim" value="true" />
+        <arg name="robot_ip" value="192.168.3.20" />
+    </include-->
+    <!--include file="$(find ur5_robotiq_moveit_config)/launch/demo.launch">
+        <arg name="sim" value="false" />
+        <arg name="limited" value="true" />
+
+    </include-->
+
+<!--node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0.21 0.0 0.280 0.0 0.0 -0.78539815 world base_link  10000.000" /-->  
+
+
+    <!-- start easy_handeye -->
+    <include file="$(find easy_handeye)/launch/calibrate.launch" >
+        <arg name="namespace_prefix" value="$(arg namespace_prefix)" />
+        <arg name="eye_on_hand" value="true" />
+
+        <arg name="tracking_base_frame" value="usb_cam" />
+        <arg name="tracking_marker_frame" value="usb_cam_marker" />
+        <arg name="robot_base_frame" value="base_link" />
+        <arg name="robot_effector_frame" value="wrist3_Link" />
+
+        <!--arg name="freehand_robot_movement" value="false" />
+        <arg name="robot_velocity_scaling" value="0.1" />
+        <arg name="robot_acceleration_scaling" value="0.1" /-->
+    </include>
+
+</launch>
